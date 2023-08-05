@@ -70,8 +70,10 @@ def loadModel(data, mdlList):
         indexTypeSize = mesh["indexTypeSize"]
 
         stride = 32
-        if vertexColor > 0: stride = stride + 4
-        if texCoord2 > 0: stride = stride + 8
+        if vertexColor > 0:
+            stride += 4
+        if texCoord2 > 0:
+            stride += 8
 
         fdat = find(files["model/mset"], "filename", file)["data"]
         df = NoeBitStream(fdat)
@@ -87,7 +89,7 @@ def loadModel(data, mdlList):
 
             idxList = []
 
-            for f in range(indexCount2):
+            for _ in range(indexCount2):
                 if indexTypeSize == 2:
                     idxList.append(df.readUShort())
                 else:
@@ -100,7 +102,7 @@ def loadModel(data, mdlList):
 
         df.seek(wireCount * indexTypeSize, 1)
 
-        for v in range(vertexCount):
+        for _ in range(vertexCount):
             posList.append(NoeVec3.fromBytes(df.readBytes(12)))
             uvsList.append(NoeVec3([df.readFloat(), -df.readFloat(), 0]))
             df.readBytes(stride - 20)
@@ -117,13 +119,13 @@ def loadModel(data, mdlList):
     return 1
 
 def extract(bs):
-    files = {}
-    files["image/derp"] = []
-    files["application/json"] = []
-    files["image/jpeg"] = []
-    files["image/png"] = []
-    files["model/mset"] = []
-
+    files = {
+        "image/derp": [],
+        "application/json": [],
+        "image/jpeg": [],
+        "image/png": [],
+        "model/mset": [],
+    }
     while not bs.checkEOF():
         name = bs.readString()
         ftype = bs.readString()
@@ -160,7 +162,7 @@ def decompress(a, b):
         n = a[n]
         p = (m << 4 | n >> 4) if r & 1 else ((m & 15) << 8 | n)
         if p < g:
-            if 256 > p:
+            if p < 256:
                 m = d
                 n = 1
                 c[d] = p
@@ -193,16 +195,13 @@ def decompress(a, b):
         g += 1
         k = m
         l = n
-        g = 256 if 4096 <= g else g
+        g = 256 if g >= 4096 else g
         r += 1
 
     return c if d == b else None
 
 def find(lst, key, value):
-    for i, dic in enumerate(lst):
-        if dic[key] == value:
-            return lst[i]
-    return -1
+    return next((lst[i] for i, dic in enumerate(lst) if dic[key] == value), -1)
 
 def loadTex(files, fname):
     ftype = os.path.splitext(fname)[1]

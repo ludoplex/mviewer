@@ -25,10 +25,8 @@ def main(filename):
         if c & 1:
             data = decompress(data, e)
 
-        output = open("%s/%s" % (folder, name), "wb")
-        output.write(data)
-        output.close()
-
+        with open(f"{folder}/{name}", "wb") as output:
+            output.write(data)
         print(name, ftype)
 
     print("COMPLETED!!!")
@@ -57,7 +55,7 @@ def decompress(a, b):
         n = a[n]
         p = (m << 4 | n >> 4) if r & 1 else ((m & 15) << 8 | n)
         if p < g:
-            if 256 > p:
+            if p < 256:
                 m = d
                 n = 1
                 c[d] = p
@@ -90,7 +88,7 @@ def decompress(a, b):
         g += 1
         k = m
         l = n
-        g = 256 if 4096 <= g else g
+        g = 256 if g >= 4096 else g
         r += 1
 
     return c if d == b else None
